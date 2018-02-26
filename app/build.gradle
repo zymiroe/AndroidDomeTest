@@ -1,0 +1,105 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'jacoco'
+
+android {
+    compileSdkVersion 26
+    defaultConfig {
+        applicationId "aili.com.tests"
+        minSdkVersion 15
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+}
+
+/**
+ * 生成jacoco测试报告
+ */
+//依赖于testDebugUnitTest任务
+task jacocoTestReport(type:JacocoReport, dependsOn: "testDebugUnitTest") {
+    println("=========jacocoTestReport start")
+    group = "Reporting"//指定task的分组
+    description = "Generate Jacoco coverage reports"
+
+    reports {
+        xml.enabled = true//开启xml报告
+        html.enabled = true//开启html报告
+    }
+
+    classDirectories = fileTree(
+            dir: "${project.buildDir}/intermediates/classes/debug",
+            excludes: ['**/R.class',
+                       '**/R$*.class',
+                       '**/*$ViewInjector*.*',
+                       '**/BuildConfig.*',
+                       '**/Manifest*.*']
+    )
+    println("path==========>>" + "${project.buildDir}/intermediates/classes/debug")
+
+    def coverageSourceDirs = "${project.projectDir}/src/main/java"//指定源码目录
+    println("coverageSourceDirs==========>>" + coverageSourceDirs)
+
+    additionalSourceDirs = files(coverageSourceDirs)
+    sourceDirectories = files(coverageSourceDirs)
+    println("executionData==========>>" + "$buildDir/jacoco/testDebugUnitTest.exec")
+    executionData = files("$buildDir/jacoco/testDebugUnitTest.exec")//指定报告数据的路径
+
+}
+
+
+jacoco {
+    toolVersion = "0.7.1.201405082137"//指定jacoco的版本
+    reportsDir = file("$buildDir/JacocoReport") //指定jacoco生成报告的文件夹
+
+}
+
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    implementation "com.android.support:design:26.1.0"
+
+    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava:2.3.0'
+
+    testImplementation 'junit:junit:4.12'
+    //mockito
+    testImplementation "org.mockito:mockito-core:2.8.9"
+//  androidTestImplementation "org.mockito:mockito-android:2.8.9"
+    //powerMock
+    testImplementation "org.powermock:powermock-api-mockito2:1.7.3"
+    //多个测试框架时 @RunWith 注解被占用 可以使用 @Rule 不过需要加入以下依赖
+    testImplementation "org.powermock:powermock-module-junit4:1.7.3"
+    testImplementation "org.powermock:powermock-module-junit4-rule:1.7.3"
+    testImplementation "org.powermock:powermock-classloading-xstream:1.7.3"
+    //robolectric
+    testImplementation "org.robolectric:robolectric:3.6.1"
+    testImplementation "org.robolectric:shadows-support-v4:3.3.2"
+    testImplementation 'org.robolectric:shadows-multidex:3.6.1'
+    // Android Testing Support Library's runner and rules
+    androidTestImplementation('com.android.support.test:runner:1.0.1')
+    androidTestImplementation('com.android.support.test:rules:1.0.1')
+    //UI Testing
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.1')
+    //MockWebServer是square出品的跟随okhttp一起发布，用来Mock服务器行为的库
+    testImplementation 'com.squareup.okhttp3:mockwebserver:3.9.1'
+
+}
